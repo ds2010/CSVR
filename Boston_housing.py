@@ -13,10 +13,15 @@ X = np.log(X)
 y = np.log(y)
 
 # parameter
-u_para = np.linspace(0.001, 5, 50)
+u_para = np.linspace(0.01, 10, 50)
 kfold = 5
 
 random.seed(0)
-u_opt= toolbox.u_opt(X, y, kfold, u_para, method=True)
+# usual rule
+#u_opt = toolbox.u_opt(X, y, kfold, u_para, method=False)
+#print(u_opt)
+# (38, 7.75734693877551)
 
+# one standard error rule
+u_opt = toolbox.u_opt(X, y, kfold, u_para, method=True)
 print(u_opt)

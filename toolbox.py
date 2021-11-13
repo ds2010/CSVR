@@ -32,6 +32,10 @@ def index_tr(k, i_kfold):
 #  1) usual rule; 2) one standard error rule
 def u_opt(X, y, kfold, u_para, method):
 
+    # normalization 
+    normalization = np.sqrt(np.sum(X**2, axis=0))/np.sqrt(X.shape[0])
+    X = X/normalization
+    
     # resample the index 
     i_mix = random.sample(range(len(y)), k=len(y))
 
@@ -66,20 +70,21 @@ def u_opt(X, y, kfold, u_para, method):
     # compute average error over all folds 
     cv = np.mean(error, axis=0)
 
-    # One standard error rule---note the min!
+    # One standard error rule
     if method == True:
         errs0 = np.zeros((kfold, len(u_para)))
         for k in range(kfold):
                 i_val = i_kfold[k]
                 errs0[k, :] = np.mean(error[i_val, :], axis=0)
 
+        # standard errors
         se = np.std(errs0, ddof=1, axis=0) / np.sqrt(kfold)  
-        i2 = np.min(np.where(cv <= cv[np.argmin(cv)]+se[np.argmin(cv)]))
-        
-        return i2, u_para[i2]
 
+        # largest value of u such that error is within one standard error of the cross-validated errors for u.min.
+        i2 = np.argmax(np.where(cv <= cv[np.argmin(cv)]+se[np.argmin(cv)]))
+        return i2, u_para[i2]
+        
     # usual rule
     else:
         i1 = np.argmin(cv)
-
         return i1, u_para[i1]
