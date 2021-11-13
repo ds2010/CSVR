@@ -46,13 +46,13 @@ def CSVR(y, x, epsilon, u):
     def afriat_rule(model, i, h):
         if i == h:
             return Constraint.Skip
-        return  model.alpha[i] + sum(model.beta[i, j] * x[i][j] for j in model.J) >= \
+        return  model.alpha[i] + sum(model.beta[i, j] * x[i][j] for j in model.J) <= \
                         model.alpha[h] + sum(model.beta[h, j] * x[i][j] for j in model.J)
     model.afriat = Constraint(model.I, model.I, rule=afriat_rule, doc='afriat inequalities')
 
     # solve model
     solver = SolverFactory("mosek")
-    solver.solve(model, tee=True)
+    solver.solve(model)
 
     # Store estimates
     alpha = np.asarray(list(model.alpha[:].value))
