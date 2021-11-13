@@ -1,8 +1,10 @@
 import numpy as np
-import cross_validation
+import toolbox
+import random
 
 
 np.random.seed(0)
+random.seed(0)
 
 # sample size
 n = 100
@@ -17,10 +19,10 @@ nse = sig*np.random.normal(0, 1, n)
 f = np.linalg.norm(X, axis=1)**2
 y = (f + nse).reshape(n, 1)
 
-n_fold = 5
-u_parameter = [10**i for i in np.linspace(-3, 1, 50)]
+kfold = 5
+u_para = np.linspace(0.001, 2.5, 100)
 
-u = cross_validation.stand_error(X, y, n_fold, u_parameter)
+u = toolbox.u_opt(X, y, kfold, u_para, method=True)
 
 print(u)
 
