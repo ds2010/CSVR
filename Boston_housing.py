@@ -23,5 +23,6 @@ random.seed(0)
 # (38, 7.75734693877551)
 
 # one standard error rule
-u_opt = toolbox.u_opt(X, y, kfold, u_para, method=True)
-print(u_opt)
+# u_opt = toolbox.u_opt(X, y, kfold, u_para, method=True)
+# print(u_opt)
+# (31, 6.330204081632653)
