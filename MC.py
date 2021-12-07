@@ -5,9 +5,8 @@ from pystoned.constant import CET_ADDI, FUN_PROD, OPT_LOCAL, RTS_VRS
 from sklearn.svm import SVR
 
 
-def inputs(n, d):
+def inputs(n, d, sig):
 
-	sig = 0.4
 	x = np.random.uniform(low=1, high=10, size=(n, d))
 	nse = np.random.normal(0, sig, n)
 
@@ -28,13 +27,14 @@ def main(sim):
 
 	n = 100
 	d = 1
+	sig = 0.4
 
 	mse_csvr, mse_svr, mse_cnls = [], [], []
 
 	for i in range(sim):
 
 		# DGP
-		x, y, y_true = inputs(n,d)
+		x, y, y_true = inputs(n, d, sig)
 
 		# solve the CSVR model
 		alpha, beta, ksia, ksib = CSVR.CSVR(y, x, epsilon=0.01, u=4)
