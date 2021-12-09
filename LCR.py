@@ -5,8 +5,8 @@ import numpy as np
 
 
 def LCR(y, x, L):
-    # Function to compute the Lipschitz Convex Regression (LCR) 
-    #         given output y, inputs X, maximum error, and tuning parameter u.
+    # Function to compute the Lipschitz Convex Regression (LCR) model
+    #         given output y, inputs X, maximum error, and tuning parameter L.
     # Sheng Dai, Aalto University School of Business, Finland
     # Dec 9, 2021
     
@@ -29,12 +29,13 @@ def LCR(y, x, L):
     # objective function 
     def objective_rule(model):
         return  sum(model.epsilon[i]**2 for i in model.I)
-                    
+                  
     model.objective = Objective(rule=objective_rule, sense=minimize, doc='Objective function')
 
     # regression equations
     def regression_rule(model, i):
-        return  y[i] ==  model.alpha[i] + sum(model.beta[i, j] * x[i][j] for j in model.J) 
+        return  y[i] == model.alpha[i] + sum(model.beta[i, j] * x[i][j] for j in model.J) + model.epsilon[i]
+
     model.regression = Constraint(model.I, rule=regression_rule, doc='First regression equantion')
 
     # Afriat's inequalities 
@@ -43,15 +44,17 @@ def LCR(y, x, L):
             return Constraint.Skip
         return  model.alpha[i] + sum(model.beta[i, j] * x[i][j] for j in model.J) <= \
                         model.alpha[h] + sum(model.beta[h, j] * x[i][j] for j in model.J)
+
     model.afriat = Constraint(model.I, model.I, rule=afriat_rule, doc='afriat inequalities')
 
     # Lipschitz norm bounded by L
     def lipschitz_norm_rule(model):
         return sum(model.beta[ij]**2 for ij in model.I * model.J) <= L**2
+
     model.lipschitz_norm = Constraint(rule=lipschitz_norm_rule, doc='Lipschitz norm')
 
     # solve model
-    solver = SolverFactory("gurobi")
+    solver = SolverFactory("mosek")
     solver.solve(model)
 
     # Store estimates
