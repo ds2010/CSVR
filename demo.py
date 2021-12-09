@@ -7,11 +7,11 @@ np.random.seed(0)
 random.seed(0)
 
 # sample size
-n = 100
+n = 50
 # dimension d
 d = 2
 # error variance
-sig = 0.5
+sig = 0.2
 
 # DGP: x and y
 X = np.random.uniform(low=1, high=10, size=(n, d))
@@ -20,9 +20,9 @@ f = np.linalg.norm(X, axis=1)**2
 y = (f + nse).reshape(n, 1)
 
 kfold = 5
-u_para = np.linspace(0.001, 2.5, 100)
+u_para = np.linspace(0.001, 2.5, 50)
 
-u = toolbox.u_opt(X, y, kfold, u_para, method=True)
+u = toolbox.u_opt(X, y, kfold, u_para)
+
 
 print(u)
-
