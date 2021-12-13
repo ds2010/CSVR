@@ -4,18 +4,18 @@ import pandas as pd
 import numpy as np
 
 
-def CSVR(y, x, epsilon, u):
-    # Function to compute the Convex Support Vector Regression (CSVR) model 
-    #         given output y, inputs X, maximum error, and tuning parameter u.
+def LCR(y, x, L):
+    # Function to compute the Lipschitz Convex Regression (LCR) model
+    #         given output y, inputs X, maximum error, and tuning parameter L.
     # Sheng Dai, Aalto University School of Business, Finland
-    # Oct 14, 2021
+    # Dec 9, 2021
     
     # transfrom x and y
     y = to_1d_list(trans_list(y))
     x = to_2d_list(trans_list(x))
     
     # Initialize the CVSR model
-    model = ConcreteModel(name = "CSVR")
+    model = ConcreteModel(name = "LCR")
 
     # initialize the sets
     model.I = Set(initialize=range(len(y)))
@@ -23,24 +23,20 @@ def CSVR(y, x, epsilon, u):
 
     # variables associated with virtual DMUs
     model.alpha = Var(model.I, doc='alpha')
-    model.beta = Var(model.I, model.J, bounds=(0.0, None), doc='beta')
-    model.ksia = Var(model.I, bounds=(0.0, None), doc='Ksi a')  
-    model.ksib = Var(model.I, bounds=(0.0, None), doc='Ksi b')
+    model.beta = Var(model.I, model.J, doc='beta')
+    model.epsilon = Var(model.I, doc='residual')  
 
     # objective function 
     def objective_rule(model):
-        return u * (sum(model.ksia[i] for i in model.I) + sum(model.ksib[i] for i in model.I)) + \
-                    sum(model.beta[i, j]**2 for i in model.I for j in model.J)
+        return  sum(model.epsilon[i]**2 for i in model.I)
+                  
     model.objective = Objective(rule=objective_rule, sense=minimize, doc='Objective function')
 
     # regression equations
-    def regression1_rule(model, i):
-        return  y[i] - sum(model.beta[i, j] * x[i][j] for j in model.J) - model.alpha[i] <= epsilon + model.ksia[i]
-    model.regression1 = Constraint(model.I, rule=regression1_rule, doc='First regression equantion')
+    def regression_rule(model, i):
+        return  y[i] == model.alpha[i] + sum(model.beta[i, j] * x[i][j] for j in model.J) + model.epsilon[i]
 
-    def regression2_rule(model, i):
-        return  sum(model.beta[i, j] * x[i][j] for j in model.J) + model.alpha[i] - y[i] <= epsilon + model.ksib[i]
-    model.regression2 = Constraint(model.I, rule=regression2_rule, doc='Second regression equantion')
+    model.regression = Constraint(model.I, rule=regression_rule, doc='First regression equantion')
 
     # Afriat's inequalities 
     def afriat_rule(model, i, h):
@@ -48,7 +44,14 @@ def CSVR(y, x, epsilon, u):
             return Constraint.Skip
         return  model.alpha[i] + sum(model.beta[i, j] * x[i][j] for j in model.J) <= \
                         model.alpha[h] + sum(model.beta[h, j] * x[i][j] for j in model.J)
+
     model.afriat = Constraint(model.I, model.I, rule=afriat_rule, doc='afriat inequalities')
+
+    # Lipschitz norm bounded by L
+    def lipschitz_norm_rule(model):
+        return sum(model.beta[ij]**2 for ij in model.I * model.J) <= L**2
+
+    model.lipschitz_norm = Constraint(rule=lipschitz_norm_rule, doc='Lipschitz norm')
 
     # solve model
     solver = SolverFactory("mosek")
@@ -60,10 +63,9 @@ def CSVR(y, x, epsilon, u):
     beta = pd.DataFrame(beta, columns=['Name', 'Key', 'Value'])
     beta = beta.pivot(index='Name', columns='Key', values='Value')
     beta = beta.to_numpy()
-    ksia = np.asarray(list(model.ksia[:].value))
-    ksib = np.asarray(list(model.ksib[:].value))
+    epsilon = np.asarray(list(model.epsilon[:].value))
 
-    return alpha, beta, ksia, ksib
+    return alpha, beta, epsilon
 
 def trans_list(li):
     if type(li) == list:
