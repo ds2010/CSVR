@@ -18,9 +18,9 @@ def inputs(n, d, SNR):
 	
 	y = y_true + nse
 
-	# Standardization: zero mean and unit norm.
-	#X = (x - np.mean(x, axis=0))/np.linalg.norm(x, axis=0)
-	#Y = y / np.linalg.norm(y)
+	# normalization
+	normalization = np.sqrt(np.sum(x**2, axis=0))/np.sqrt(x.shape[0])
+	x = x/normalization
 
 	return x, y, y_true
 

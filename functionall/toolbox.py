@@ -34,10 +34,6 @@ def index_tr(k, i_kfold):
 #  1) usual rule; 2) one standard error rule
 def u_opt(X, y, kfold, u_para):
 
-    # normalization 
-    # normalization = np.sqrt(np.sum(X**2, axis=0))/np.sqrt(X.shape[0])
-    # X = X/normalization
-    
     # resample the index 
     i_mix = random.sample(range(len(y)), k=len(y))
 
