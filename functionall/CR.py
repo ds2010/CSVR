@@ -4,16 +4,16 @@ from pyomo.core.expr.numvalue import NumericValue
 import numpy as np
 import pandas as pd
 
-from .constant import CET_ADDI, CET_MULT, FUN_PROD, FUN_COST, OPT_DEFAULT, RTS_CRS, RTS_VRS, OPT_LOCAL
-from .utils import tools
+from constant import CET_ADDI, CET_MULT, FUN_PROD, FUN_COST, OPT_DEFAULT, RTS_CRS, RTS_VRS, OPT_LOCAL
+import tools
 
 
 class CR:
-    """Convex Nonparametric Least Square (CNLS)
+    """Convex Regression (CR)
     """
 
     def __init__(self, y, x, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS):
-        """CNLS model
+        """CR model
 
         Args:
             y (float): output variable. 

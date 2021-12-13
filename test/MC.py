@@ -1,9 +1,11 @@
 import numpy as np
-import CSVR
-import LCR
-import pystoned.CNLS as CNLS
-from pystoned.constant import CET_ADDI, FUN_PROD, OPT_LOCAL, RTS_VRS
+import sys
+sys.path.insert(1, 'functionall/')
+
+import CNLS, CR, CSVR, LCR
+from constant import CET_ADDI, FUN_PROD, OPT_LOCAL, RTS_VRS
 from sklearn.svm import SVR
+
 
 
 def inputs(n, d, SNR):
@@ -27,14 +29,14 @@ def main(sim):
 
 	n = 100
 	d = 3
-	sig = 1
+	SNR = 3
 
 	mse_csvr, mse_svr, mse_cnls, mse_lcr = [], [], [], []
 
 	for i in range(sim):
 
 		# DGP
-		x, y, y_true = inputs(n, d, sig)
+		x, y, y_true = inputs(n, d, SNR)
 
 		# solve the CSVR model
 		alpha, beta, ksia, ksib = CSVR.CSVR(y, x, epsilon=0.4, u=1.5) #6.9, 8.3
@@ -64,8 +66,9 @@ def main(sim):
 if __name__ == '__main__':
 
     np.random.seed(0)
-    sim = 50
+    sim = 10
 
     with open('01' + '.txt', 'w') as f:
         for item in main(sim):
             f.write("%s\n" % item)
+
