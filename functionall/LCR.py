@@ -2,6 +2,7 @@ from pyomo.environ import *
 from pyomo.opt import SolverFactory
 import pandas as pd
 import numpy as np
+from tools import trans_list, to_1d_list, to_2d_list
 
 
 def LCR(y, x, L):
@@ -66,26 +67,3 @@ def LCR(y, x, L):
     epsilon = np.asarray(list(model.epsilon[:].value))
 
     return alpha, beta, epsilon
-
-def trans_list(li):
-    if type(li) == list:
-        return li
-    return li.tolist()
-
-def to_1d_list(li):
-    if type(li) == int or type(li) == float:
-        return [li]
-    if type(li[0]) == list:
-        rl = []
-        for i in range(len(li)):
-            rl.append(li[i][0])
-        return rl
-    return li
-
-def to_2d_list(li):
-    if type(li[0]) != list:
-        rl = []
-        for value in li:
-            rl.append([value])
-        return rl
-    return li
