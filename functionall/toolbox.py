@@ -6,12 +6,12 @@ import CSVR
 import LCR
 
 # Calculate yhat in testing sample
-def yhat(alpha, beta, X_test):
+def yhat(alpha, beta, x_test):
 
     # compute yhat for each testing observation
-    yhat = np.zeros((len(X_test), 1))
-    for i in range(len(X_test)):
-        yhat[i] = (alpha + np.matmul(beta, X_test[i].T)).min(axis=0)
+    yhat = np.zeros((len(x_test), 1))
+    for i in range(len(x_test)):
+        yhat[i] = (alpha + np.matmul(beta, x_test[i].T)).min(axis=0)
         
     return yhat
 
@@ -32,7 +32,7 @@ def index_tr(k, i_kfold):
 
 # cross validation: find the optimal u using: 
 #  1) usual rule; 2) one standard error rule
-def u_opt(X, y, kfold, u_para):
+def u_opt(x, y, kfold, u_para):
 
     # resample the index 
     i_mix = random.sample(range(len(y)), k=len(y))
@@ -50,15 +50,15 @@ def u_opt(X, y, kfold, u_para):
         i_val = i_kfold[k]
 
         # training predictors, training responses
-        x_tr = X[i_tr, :]  
+        x_tr = x[i_tr, :]  
         y_tr = y[i_tr]   
         # validation predictors, validation responses
-        x_val = X[i_val, :]
+        x_val = x[i_val, :]
         y_val = y[i_val]  
 
         error_tmp = []
         for j in u_para:
-            alpha, beta, ksia, ksib = CSVR.CSVR(y=y_tr, x=x_tr, epsilon=0.4, u=j)
+            alpha, beta, ksia, ksib = CSVR.CSVR(y=y_tr, x=x_tr, epsilon=0.5, u=j)
             error_tmp.append( (yhat(alpha, beta, x_val) - y_val)**2 )
 
         error.append(np.array(error_tmp).reshape(len(u_para), len(y_val)).T)
@@ -86,12 +86,8 @@ def u_opt(X, y, kfold, u_para):
 
 
 # cross validation: find the optimal epcilon
-def e_opt(X, y, kfold, e_para):
+def e_opt(x, y, kfold, e_para):
 
-    # normalization 
-    # normalization = np.sqrt(np.sum(X**2, axis=0))/np.sqrt(X.shape[0])
-    # X = X/normalization
-    
     # resample the index 
     i_mix = random.sample(range(len(y)), k=len(y))
 
@@ -108,15 +104,15 @@ def e_opt(X, y, kfold, e_para):
         i_val = i_kfold[k]
 
         # training predictors, training responses
-        x_tr = X[i_tr, :]  
+        x_tr = x[i_tr, :]  
         y_tr = y[i_tr]   
         # validation predictors, validation responses
-        x_val = X[i_val, :]
+        x_val = x[i_val, :]
         y_val = y[i_val]  
 
         error_tmp = []
         for j in e_para:
-            alpha, beta, ksia, ksib = CSVR.CSVR(y=y_tr, x=x_tr, epsilon=j, u=2)
+            alpha, beta, ksia, ksib = CSVR.CSVR(y=y_tr, x=x_tr, epsilon=j, u=4)
             error_tmp.append( (yhat(alpha, beta, x_val) - y_val)**2 )
 
         error.append(np.array(error_tmp).reshape(len(e_para), len(y_val)).T)
@@ -144,12 +140,8 @@ def e_opt(X, y, kfold, e_para):
 
 # cross validation for LCR: find the optimal L using: 
 #  1) usual rule; 2) one standard error rule
-def L_opt(X, y, kfold, L_para):
+def L_opt(x, y, kfold, L_para):
 
-    # normalization 
-    # normalization = np.sqrt(np.sum(X**2, axis=0))/np.sqrt(X.shape[0])
-    # X = X/normalization
-    
     # resample the index 
     i_mix = random.sample(range(len(y)), k=len(y))
 
@@ -166,10 +158,10 @@ def L_opt(X, y, kfold, L_para):
         i_val = i_kfold[k]
 
         # training predictors, training responses
-        x_tr = X[i_tr, :]  
+        x_tr = x[i_tr, :]  
         y_tr = y[i_tr]   
         # validation predictors, validation responses
-        x_val = X[i_val, :]
+        x_val = x[i_val, :]
         y_val = y[i_val]  
 
         error_tmp = []
