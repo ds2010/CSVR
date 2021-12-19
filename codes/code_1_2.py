@@ -1,6 +1,3 @@
-import sys
-sys.path.append('../functionall/')
-
 import numpy as np
 import random
 import MC
