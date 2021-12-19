@@ -2,25 +2,27 @@ import numpy as np
 import CNLS, CR, CSVR, LCR, DGP, toolbox
 from constant import CET_ADDI, FUN_PROD, OPT_LOCAL, RTS_VRS
 from sklearn.svm import SVR
+from sklearn.model_selection import GridSearchCV
 
 
-def simulation(n, d, SNR):
+def simulation(n, d, epsilon):
 	
-	kfold = 5
-	para = np.linspace(0.01, 10, 50)
+	kfold = 10
+	para = np.linspace(0.1, 5, 50)
 
 	# DGP
-	x, y, y_true = DGP.inputs(n, d, SNR)
+	x, y, y_true = DGP.inputs(n, d)
 
 	# solve the CSVR model
-	u_std, u_one = toolbox.u_opt(x, y.reshape(n, 1), kfold, u_para=para)
-	alpha, beta, ksia, ksib = CSVR.CSVR(y, x, epsilon=0.01, u=u_one)
+	u_std, u_one = toolbox.u_opt(x, y.reshape(n, 1), kfold, epsilon, u_para=para)
+	alpha, beta, ksia, ksib = CSVR.CSVR(y, x, epsilon=epsilon, u=u_one)
 	y_csvr = alpha + np.sum(beta * x, axis=1)
 	mse_csvr = np.mean((y_true - y_csvr)**2)
 
 	# solve the SVR model
-	C=0.4
-	svr = SVR(C, epsilon=0.01).fit(x, y)
+	para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'kernel': ['rbf', 'linear']}
+	svr = GridSearchCV(SVR(),para_grid)
+	svr.fit(x, y)
 	y_svr = svr.predict(x)
 	mse_svr = np.mean((y_true - y_svr)**2)
 

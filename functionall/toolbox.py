@@ -30,7 +30,7 @@ def index_tr(k, i_kfold):
 
 # cross validation: find the optimal u using: 
 #  1) usual rule; 2) one standard error rule
-def u_opt(x, y, kfold, u_para):
+def u_opt(x, y, kfold, epsilon, u_para):
 
     # resample the index 
     i_mix = random.sample(range(len(y)), k=len(y))
@@ -42,7 +42,7 @@ def u_opt(x, y, kfold, u_para):
     # total errors in each fold 
     error = []
     for k in range(kfold):
-        #print("Fold", k, "\n")
+        print("Fold", k, "\n")
 
         i_tr = index_tr(k, i_kfold)
         i_val = i_kfold[k]
@@ -56,7 +56,7 @@ def u_opt(x, y, kfold, u_para):
 
         error_tmp = []
         for j in u_para:
-            alpha, beta, ksia, ksib = CSVR.CSVR(y=y_tr, x=x_tr, epsilon=0.01, u=j)
+            alpha, beta, ksia, ksib = CSVR.CSVR(y=y_tr, x=x_tr, epsilon=epsilon, u=j)
             error_tmp.append( (yhat(alpha, beta, x_val) - y_val)**2 )
 
         error.append(np.array(error_tmp).reshape(len(u_para), len(y_val)).T)
@@ -83,6 +83,7 @@ def u_opt(x, y, kfold, u_para):
 
     return u_para[i1], u_para[i2]
 
+   
 
 # cross validation for LCR: find the optimal L using: 
 #  1) usual rule; 2) one standard error rule
