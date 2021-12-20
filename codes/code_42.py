@@ -21,8 +21,8 @@ if __name__ == '__main__':
     random.seed(0)
 
     M=50
-    n=100
-    d=2
-    e=0
+    n=50
+    d=3
+    e=0.1
 
     main()

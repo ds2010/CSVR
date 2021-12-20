@@ -9,11 +9,11 @@ def main():
 
     MSE_all = np.zeros((M, 5))
     for i in range(M):
-        MSE_all[i, :] = MC.simulation(n, d, e)
+        MSE_all[i, :] = MC.simulation(n, d, epsilon=e)
 
     MSE = np.mean(MSE_all, axis=0)
 
-    np.savetxt('code' + '{0}_{1}_{2}.txt'.format(M, d, e), MSE, fmt = '%-.4f')
+    np.savetxt('code' + '{0}_{1}_{2}.txt'.format(n, d, e), MSE, fmt = '%-.4f')
 
 if __name__ == '__main__':
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     M=50
     n=100
-    d=1
-    e=0.01
+    d=3
+    e=0
 
     main()
