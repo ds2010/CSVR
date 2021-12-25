@@ -16,16 +16,11 @@ def yhat(alpha, beta, x_test):
 
 # calculate the index of training set
 def index_tr(k, i_kfold):
-    if k == 0:
-        return i_kfold[1]+i_kfold[2]+i_kfold[3]+i_kfold[4]
-    elif k == 1:
-        return i_kfold[0]+i_kfold[2]+i_kfold[3]+i_kfold[4]
-    elif k == 2:
-        return i_kfold[0]+i_kfold[1]+i_kfold[3]+i_kfold[4]
-    elif k == 3:
-        return i_kfold[0]+i_kfold[1]+i_kfold[2]+i_kfold[4]
-    else:
-        return i_kfold[0]+i_kfold[1]+i_kfold[2]+i_kfold[3]
+    
+    i_kfold_without_k = i_kfold[:k] + i_kfold[(k + 1):]
+    flatlist = [item for elem in i_kfold_without_k for item in elem]
+
+    return flatlist
 
 
 # cross validation: find the optimal u using: 
