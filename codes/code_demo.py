@@ -1,10 +1,11 @@
+import sys
+sys.path.append('../functionall')
 import numpy as np
 import pandas as pd
 import random
 import DGP
 import toolbox
 import MC
-
 
 def main():
 
@@ -41,8 +42,8 @@ if __name__ == '__main__':
     random.seed(0)
 
     M=50
-    n=200
-    d=3
-    sig = 2
+    n=50
+    d=1
+    sig = 0.5
 
     main()
