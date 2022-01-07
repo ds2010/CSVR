@@ -15,12 +15,12 @@ def simulation(n, d, sig, e_para, u_para):
     y_csvr = alpha + np.sum(beta * x, axis=1)
     mse_csvr = np.mean((y_true - y_csvr)**2)
 
-    # solve the SVR model
-    para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'epsilon': [0, 0.001, 0.01, 0.1, 0.2]}
-    svr = GridSearchCV(SVR(),para_grid)
-    svr.fit(x, y)
-    y_svr = svr.predict(x)
-    mse_svr = np.mean((y_true - y_svr)**2)
+    # # solve the SVR model
+    # para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'epsilon': [0, 0.001, 0.01, 0.1, 0.2]}
+    # svr = GridSearchCV(SVR(),para_grid)
+    # svr.fit(x, y)
+    # y_svr = svr.predict(x)
+    # mse_svr = np.mean((y_true - y_svr)**2)
 
     # solve the CNLS model
     model1 = CNLS.CNLS(y, x, z=None, cet= CET_ADDI, fun= FUN_PROD, rts= RTS_VRS)
@@ -28,4 +28,4 @@ def simulation(n, d, sig, e_para, u_para):
     mse_cnls = np.mean((model1.get_frontier() - y_true)**2)
 
 
-    return mse_csvr, mse_svr, mse_cnls
+    return mse_csvr, mse_cnls

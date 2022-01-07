@@ -9,31 +9,32 @@ import MC
 
 def main():
 
-    # cross validation
-    e_all, u_all, re_all = [], [], []
-    for i in range(M):
-        kfold = 10
-        u = np.array([0.1, 0.5, 1, 2, 5])
-        epsilon = np.array([0, 0.001, 0.01, 0.1, 0.2])
+    # # cross validation
+    re_all = []
+    # for i in range(M):
+    #     kfold = 10
+    #     u = np.array([0.1, 0.5, 1, 2, 5])
+    #     epsilon = np.array([0, 0.001, 0.01, 0.1, 0.2])
 
-        # DGP
-        x, y, y_true = DGP.inputs(n, d, sig)
+    #     # DGP
+    #     x, y, y_true = DGP.inputs(n, d, sig)
 
-        e_grid, u_grid = toolbox.GridSearch(x, y, kfold, epsilon=epsilon, u=u)
-        e_all.append(e_grid)
-        u_all.append(u_grid)
-    e_para, u_para = np.mean(np.array(e_all)), np.mean(np.array(u_all))
-    e_std, u_std = np.std(np.array(e_all)), np.std(np.array(u_all))
+    #     e_grid, u_grid = toolbox.GridSearch(x, y, kfold, epsilon=epsilon, u=u)
+    #     e_all.append(e_grid)
+    #     u_all.append(u_grid)
+    # e_para, u_para = np.mean(np.array(e_all)), np.mean(np.array(u_all))
+    # e_std, u_std = np.std(np.array(e_all)), np.std(np.array(u_all))
 
     #simulations
-    for i in range(M):
-        re_all.append(MC.simulation(n, d, sig, e_para, u_para))
+    for _ in range(M):
+        re_all.append(MC.simulation(n, d, sig, 0.1052, 3.0145))
 
-    data = np.array([np.append(np.mean(np.array(re_all), axis=0),[e_para,u_para]), 
-                        np.append(np.std(np.array(re_all), axis=0),[e_std, u_std])])
+    data = np.array([np.mean(np.array(re_all), axis=0), 
+                        np.std(np.array(re_all), axis=0)])
 
-    df = pd.DataFrame(data, columns = ['csvr', 'svr', 'cnls', 'e_grid', 'u_grid'])
-    df.to_csv('code' + '{0}_{1}_{2}.csv'.format(n, d, sig))
+    df = pd.DataFrame(data, columns = ['csvr', 'cnls'])
+    # df.to_csv('code' + '{0}_{1}_{2}.csv'.format(n, d, sig))
+    print(df)
 
 
 if __name__ == '__main__':
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     random.seed(0)
 
     M=50
-    n=50
+    n=100
     d=1
     sig = 0.5
 

@@ -14,7 +14,7 @@ def set_neos_email(address):
         address (String): your own vaild email address.
     """
     if address == OPT_LOCAL:
-        print("Optimizing locally.")
+        # print("Optimizing locally.")
         return False
     if not __email_re.match(address):
         raise ValueError("Invalid email address.")
@@ -32,9 +32,9 @@ def optimize_model(model, email, cet, solver=OPT_DEFAULT):
             raise ValueError(
                 "Please specify the solver for optimizing multiplicative model locally.")
         solver_instance = SolverFactory(solver)
-        print("Estimating the {} locally with {} solver.".format(
-            CET_Model_Categories[cet], solver))
-        return solver_instance.solve(model, tee=True), 1
+        # print("Estimating the {} locally with {} solver.".format(
+        #     CET_Model_Categories[cet], solver), flush=True)
+        return solver_instance.solve(model), 1
     else:
         if solver is OPT_DEFAULT and cet is CET_ADDI:
             solver = "mosek"

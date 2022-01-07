@@ -31,7 +31,7 @@ def main():
     data = np.array([np.append(np.mean(np.array(re_all), axis=0),[e_para,u_para]), 
                         np.append(np.std(np.array(re_all), axis=0),[e_std, u_std])])
 
-    df = pd.DataFrame(data, columns = ['csvr', 'svr', 'cnls', 'e_grid', 'u_grid'])
+    df = pd.DataFrame(data, columns = ['csvr', 'cnls', 'e_grid', 'u_grid'])
     df.to_csv('code' + '{0}_{1}_{2}.csv'.format(n, d, sig))
 
 
@@ -40,9 +40,9 @@ if __name__ == '__main__':
     np.random.seed(0)
     random.seed(0)
 
-    M=50
-    n=500
-    d=2
-    sig = 2
+    M=100
+    n=50
+    d=1
+    sig = 1
 
     main()

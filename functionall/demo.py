@@ -1,4 +1,7 @@
+# import sys
+# sys.path.append('../functionall')
 import numpy as np
+import pandas as pd
 import random
 import CNLS, CSVR, DGP, toolbox
 from constant import CET_ADDI, FUN_PROD, OPT_LOCAL, RTS_VRS
@@ -6,35 +9,20 @@ from sklearn.svm import SVR
 from sklearn.model_selection import GridSearchCV
 
 
-def simulation(n, d, sig):
+def simulation(n, d, sig, e_para, u_para):
     
-    kfold = 10
-    para = np.linspace(0.01, 5, 50)
-    # epsilon = np.array([0, 0.001, 0.01, 0.1, 0.2])
 
     # DGP
     x, y, y_true = DGP.inputs(n, d, sig)
 
     # solve the CSVR model
     # u_grid = toolbox.u_opt(x, y, kfold, epsilon=0.1, u_para=para)
-    alpha, beta, ksia, ksib = CSVR.CSVR(y, x, epsilon=0.1052, u=3.0145)
+    alpha, beta, ksia, ksib = CSVR.CSVR(y, x, epsilon=e_para, u=u_para)
     y_csvr = alpha + np.sum(beta * x, axis=1)
     mse_csvr = np.mean((y_true - y_csvr)**2)
 
-    # solve the SVR model
-    para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'epsilon': [0, 0.001, 0.01, 0.1, 0.2]}
-    svr = GridSearchCV(SVR(),para_grid)
-    svr.fit(x, y)
-    y_svr = svr.predict(x)
-    mse_svr = np.mean((y_true - y_svr)**2)
 
-    # solve the CNLS model
-    model1 = CNLS.CNLS(y, x, z=None, cet= CET_ADDI, fun= FUN_PROD, rts= RTS_VRS)
-    model1.optimize(OPT_LOCAL)
-    mse_cnls = np.mean((model1.get_frontier() - y_true)**2)
-
-
-    return mse_csvr, mse_svr, mse_cnls
+    return mse_csvr
 
 if __name__ == '__main__':
 
@@ -44,12 +32,14 @@ if __name__ == '__main__':
 
     M=50
     n=100
-    d=1
-    sig = 0.5
+    d=3
+    sig = 2
 
+    para = pd.read_csv('code' + '{0}_{1}_{2}.csv'.format(n, d, sig), skipinitialspace=True, usecols=['e_grid', 'u_grid'], nrows=1)
+    e_para, u_para = np.array(para)[0][0], np.array(para)[0][1]
     re_all = []
     for i in range(M):
-        re_all.append(simulation(n, d, sig))
+        re_all.append(simulation(n, d, sig, e_para, u_para))
     da_all = np.array(re_all)
     data = np.array([np.mean(da_all, axis=0), np.std(da_all, axis=0)])
 

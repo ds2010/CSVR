@@ -23,7 +23,7 @@ def CSVR(y, x, epsilon, u):
 
     # variables associated with virtual DMUs
     model.alpha = Var(model.I, doc='alpha')
-    model.beta = Var(model.I, model.J, doc='beta')
+    model.beta = Var(model.I, model.J, bounds=(0.0, None), doc='beta')
     model.ksia = Var(model.I, bounds=(0.0, None), doc='Ksi a')  
     model.ksib = Var(model.I, bounds=(0.0, None), doc='Ksi b')
 
