@@ -1,6 +1,6 @@
 import numpy as np
 import random
-import CSVR, LCR
+import CSVR
 
 
 # Calculate yhat in testing sample

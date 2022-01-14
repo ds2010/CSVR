@@ -9,6 +9,8 @@ from sklearn.svm import SVR
 from sklearn import preprocessing
 from sklearn.model_selection import GridSearchCV
 
+np.random.seed(0)
+random.seed(0)
 
 # Calculate yhat in testing sample
 def yhat(alpha, beta, x_test):
@@ -21,15 +23,20 @@ def yhat(alpha, beta, x_test):
 	return yhat
 
 # CSVR
-def csvr_mse(x, y, i_kfold):
+def csvr_mse(x, y, i_mix):
 
-	u = np.array([0.1, 0.5, 1, 2, 5])
-	epsilon = np.array([0, 0.001, 0.01, 0.1, 0.2])
-	kfold = 10
-	e_grid, u_grid = toolbox.GridSearch(x, y, kfold, epsilon=epsilon, u=u)
+	# u = np.array([0.1, 0.5, 1, 2, 5])
+	# epsilon = np.array([0, 0.001, 0.01, 0.1, 0.2])
+	# e_grid, u_grid = toolbox.GridSearch(x, y, kfold, epsilon=epsilon, u=u)
+	
+	
 	error_all = []
 	for k in range(kfold):
-		print("Fold", k, "\n")
+		# print("Fold", k, "\n")
+
+		# divide up i.mix into K equal size chunks
+		m = len(y) // kfold
+		i_kfold = [i_mix[i:i+m] for i in range(0, len(i_mix), m)]
 
 		i_tr = toolbox.index_tr(k, i_kfold)
 		i_val = i_kfold[k]
@@ -42,7 +49,7 @@ def csvr_mse(x, y, i_kfold):
 		x_val = x[i_val, :]
 		y_val = y[i_val] 
 
-		alpha, beta, ksia, ksib = CSVR.CSVR(y_tr, x_tr, epsilon=e_grid, u=u_grid)
+		alpha, beta, ksia, ksib = CSVR.CSVR(y_tr, x_tr, epsilon=0.1, u=2.7)
 
 		error_all.append(np.mean((yhat(alpha, beta, x_val) - y_val)**2))
 		
@@ -53,12 +60,15 @@ def csvr_mse(x, y, i_kfold):
 	return mse
 
 # SVR
-def svr_mse(x, y, i_kfold):
+def svr_mse(x, y, i_mix):
 
 	error_all = []
-	kfold = 10
 	for k in range(kfold):
-		print("Fold", k, "\n")
+		# print("Fold", k, "\n")
+
+		# divide up i.mix into K equal size chunks
+		m = len(y) // kfold
+		i_kfold = [i_mix[i:i+m] for i in range(0, len(i_mix), m)]
 
 		i_tr = toolbox.index_tr(k, i_kfold)
 		i_val = i_kfold[k]
@@ -82,12 +92,15 @@ def svr_mse(x, y, i_kfold):
 	return mse
 
 # CNLS
-def cnls_mse(x, y, i_kfold):
+def cnls_mse(x, y, i_mix):
 
 	error_all = []
-	kfold = 10
 	for k in range(kfold):
-		print("Fold", k, "\n")
+		# print("Fold", k, "\n")
+
+		# divide up i.mix into K equal size chunks
+		m = len(y) // kfold
+		i_kfold = [i_mix[i:i+m] for i in range(0, len(i_mix), m)]
 
 		i_tr = toolbox.index_tr(k, i_kfold)
 		i_val = i_kfold[k]
@@ -110,8 +123,6 @@ def cnls_mse(x, y, i_kfold):
 
 	return mse
 
-np.random.seed(0)
-random.seed(0)
 # load data
 data = pd.read_csv('Boston.csv')
 
@@ -119,7 +130,7 @@ data = pd.read_csv('Boston.csv')
 # #Remove MEDV outliers (MEDV = 50.0)
 # idx = data.loc[data['MEDV'] >= 50].index
 # data = data.drop(idx)
-data = data.head(20)
+data = data.head(50)
 
 x = data.loc[:, ['NOX', 'DIS', 'RM', 'PTRATIO']]
 y = data['MEDV']
@@ -128,20 +139,10 @@ for col in ['NOX', 'DIS']:
 x = np.array(x)
 y = np.array(np.log1p(y))
 
-min_max_scaler = preprocessing.MinMaxScaler()
-x = min_max_scaler.fit_transform(x)
-
 kfold = 10
-
-
 i_mix = random.sample(range(len(y)), k=len(y))
 
-# divide up i.mix into K equal size chunks
-m = len(y) // kfold
-i_kfold = [i_mix[i:i+m] for i in range(0, len(i_mix), m)]
-
-
-mse_csvr = csvr_mse(x, y, i_kfold)
-mse_cnls = cnls_mse(x, y, i_kfold)
-mse_svr = svr_mse(x, y, i_kfold)
+mse_csvr = csvr_mse(x, y, i_mix)
+mse_cnls = cnls_mse(x, y, i_mix)
+mse_svr = svr_mse(x, y, i_mix)
 print(mse_csvr, mse_svr, mse_cnls)

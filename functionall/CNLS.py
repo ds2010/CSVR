@@ -52,7 +52,7 @@ class CNLS:
                                   doc='beta')
         self.__model__.epsilon = Var(self.__model__.I, doc='residual')
         self.__model__.frontier = Var(self.__model__.I,
-                                      bounds=(0.0, None),
+                                    #   bounds=(0.0, None),
                                       doc='estimated frontier')
 
         # Setup the objective function and constraints
