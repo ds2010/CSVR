@@ -6,6 +6,7 @@ import random
 import CNLS, CSVR, toolbox
 from constant import CET_ADDI, FUN_PROD, OPT_LOCAL, RTS_VRS
 from sklearn.svm import SVR
+from sklearn import linear_model
 from sklearn import preprocessing
 from sklearn.model_selection import GridSearchCV
 
@@ -81,8 +82,8 @@ def svr_mse(x, y, i_mix):
 		x_val = x[i_val, :]
 		y_val = y[i_val] 
 
-		para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'epsilon': [0, 0.001, 0.01, 0.1, 0.2]}
-		svr = GridSearchCV(SVR(),para_grid)
+		# para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'epsilon': [0, 0.001, 0.01, 0.1, 0.2]}
+		svr = SVR(kernel='rbf', C=1, gamma=0.1)
 		svr.fit(x_tr, y_tr)
 
 		error_all.append(np.mean((svr.predict(x_val) - y_val)**2))
@@ -123,26 +124,57 @@ def cnls_mse(x, y, i_mix):
 
 	return mse
 
+# SVR
+def lasso(x, y, i_mix):
+
+	error_all = []
+	for k in range(kfold):
+		# print("Fold", k, "\n")
+
+		# divide up i.mix into K equal size chunks
+		m = len(y) // kfold
+		i_kfold = [i_mix[i:i+m] for i in range(0, len(i_mix), m)]
+
+		i_tr = toolbox.index_tr(k, i_kfold)
+		i_val = i_kfold[k]
+
+	    # training predictors, training responses
+		x_tr = x[i_tr, :]  
+		y_tr = y[i_tr]   
+
+		# validation predictors, validation responses
+		x_val = x[i_val, :]
+		y_val = y[i_val] 
+
+		# para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'epsilon': [0, 0.001, 0.01, 0.1, 0.2]}
+		clf = linear_model.Lasso(alpha=0.5)
+		clf.fit(x_tr, y_tr)
+
+		error_all.append(np.mean((clf.predict(x_val) - y_val)**2))
+
+	mse = np.mean(np.array(error_all), axis=0)
+
+	return mse
+
+
 # load data
 data = pd.read_csv('Boston.csv')
 
+# data = data[~(data['MEDV'] >= 50.0)]
+data = data.head(505)
 
-# #Remove MEDV outliers (MEDV = 50.0)
-# idx = data.loc[data['MEDV'] >= 50].index
-# data = data.drop(idx)
-data = data.head(50)
-
-x = data.loc[:, ['NOX', 'DIS', 'RM', 'PTRATIO']]
+x = data.loc[:, ['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT']]
 y = data['MEDV']
-for col in ['NOX', 'DIS']:
-    x[col] = np.log1p(x[col])
 x = np.array(x)
-y = np.array(np.log1p(y))
+y = np.array(y)
 
-kfold = 10
+
+kfold = 5
 i_mix = random.sample(range(len(y)), k=len(y))
 
 mse_csvr = csvr_mse(x, y, i_mix)
 mse_cnls = cnls_mse(x, y, i_mix)
 mse_svr = svr_mse(x, y, i_mix)
-print(mse_csvr, mse_svr, mse_cnls)
+mse_lasso = lasso(x, y, i_mix)
+print(mse_csvr, mse_cnls, mse_svr, mse_lasso)
+# print(x)
