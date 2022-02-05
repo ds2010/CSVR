@@ -1,6 +1,6 @@
 import numpy as np
 import random
-import CSVR
+import CSVR, LCR
 
 
 # Calculate yhat in testing sample
@@ -33,6 +33,8 @@ def u_opt(x, y, kfold, epsilon, u):
     # divide up i.mix into K equal size chunks
     m = len(y) // kfold
     i_kfold = [i_mix[i:i+m] for i in range(0, len(i_mix), m)]
+    if len(i_kfold) > kfold:
+        i_kfold[-2:] = [i_kfold[-2]+i_kfold[-1]]
 
     # total errors in each fold 
     error = []
@@ -52,23 +54,15 @@ def u_opt(x, y, kfold, epsilon, u):
         error_tmp = []
         for j in u:
             alpha, beta, ksia, ksib = CSVR.CSVR(y=y_tr, x=x_tr, epsilon=epsilon, u=j)
-            error_tmp.append( (yhat(alpha, beta, x_val) - y_val)**2 )
+            error_tmp.append( np.mean((yhat(alpha, beta, x_val) - y_val)**2 ) )
 
-        error.append(np.array(error_tmp).reshape(len(u), len(y_val)).T)
+        error.append(error_tmp)
         
-    error = np.array(error).reshape(len(y), len(u))
-
     # compute average error over all folds 
-    cv = np.mean(error, axis=0)
-    
-    # one standard error rule
-    errs0 = np.zeros((kfold, len(u)))
-    for k in range(kfold):
-            i_val = i_kfold[k]
-            errs0[k, :] = np.mean(error[i_val, :], axis=0)
+    cv = np.mean(np.array(error), axis=0)
 
-    # standard errors
-    se = np.std(errs0, ddof=1, axis=0) / np.sqrt(kfold)  
+    # one standard error rule, standard errors
+    se = np.std(error, ddof=1, axis=0) / np.sqrt(kfold)  
 
     # largest value of u such that error is within one standard error of the cross-validated errors for u.min.
     i2 = np.argmax(np.where(cv <= cv[np.argmin(cv)]+se[np.argmin(cv)]))
@@ -79,6 +73,55 @@ def u_opt(x, y, kfold, epsilon, u):
     return u[i1], u[i2]
 
 
+# cross validation for LCR: find the optimal L using: 
+#  1) usual rule; 2) one standard error rule
+def L_opt(x, y, kfold, L_para):
+
+    # resample the index 
+    i_mix = random.sample(range(len(y)), k=len(y))
+
+    # divide up i.mix into K equal size chunks
+    m = len(y) // kfold
+    i_kfold = [i_mix[i:i+m] for i in range(0, len(i_mix), m)]
+    if len(i_kfold) > kfold:
+        i_kfold[-2:] = [i_kfold[-2]+i_kfold[-1]]
+
+    # total errors in each fold 
+    error = []
+    for k in range(kfold):
+        print("Fold", k, "\n")
+
+        i_tr = index_tr(k, i_kfold)
+        i_val = i_kfold[k]
+
+        # training predictors, training responses
+        x_tr = x[i_tr, :]  
+        y_tr = y[i_tr]   
+        # validation predictors, validation responses
+        x_val = x[i_val, :]
+        y_val = y[i_val]  
+
+        error_tmp = []
+        for j in L_para:
+            alpha, beta, epsilon = LCR.LCR(y=y_tr, x=x_tr, L=j)
+            error_tmp.append( np.mean((yhat(alpha, beta, x_val) - y_val)**2 ) )
+
+        error.append(error_tmp)
+        
+    # compute average error over all folds 
+    cv = np.mean(np.array(error), axis=0)
+
+    # one standard error rule, standard errors
+    se = np.std(error, ddof=1, axis=0) / np.sqrt(kfold)  
+
+    # largest value of u such that error is within one standard error of the cross-validated errors for u.min.
+    i2 = np.argmax(np.where(cv <= cv[np.argmin(cv)]+se[np.argmin(cv)]))
+        
+    # usual rule
+    i1 = np.argmin(cv)
+    return L_para[i1], L_para[i2]
+
+
 # cross validation using grid search
 def GridSearch(x, y, kfold, epsilon, u):
     # resample the index 
@@ -87,6 +130,8 @@ def GridSearch(x, y, kfold, epsilon, u):
     # divide up i.mix into K equal size chunks
     m = len(y) // kfold
     i_kfold = [i_mix[i:i+m] for i in range(0, len(i_mix), m)]
+    if len(i_kfold) > kfold:
+        i_kfold[-2:] = [i_kfold[-2]+i_kfold[-1]]
 
     # total errors in each fold 
     error_graph = []
