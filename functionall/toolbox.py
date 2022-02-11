@@ -39,7 +39,7 @@ def u_opt(x, y, kfold, epsilon, u):
     # total errors in each fold 
     error = []
     for k in range(kfold):
-        print("Fold", k, "\n")
+        # print("Fold", k, "\n")
 
         i_tr = index_tr(k, i_kfold)
         i_val = i_kfold[k]
@@ -89,7 +89,7 @@ def L_opt(x, y, kfold, L_para):
     # total errors in each fold 
     error = []
     for k in range(kfold):
-        print("Fold", k, "\n")
+        # print("Fold", k, "\n")
 
         i_tr = index_tr(k, i_kfold)
         i_val = i_kfold[k]
@@ -136,7 +136,7 @@ def GridSearch(x, y, kfold, epsilon, u):
     # total errors in each fold 
     error_graph = []
     for k in range(kfold):
-        print("Fold", k, "\n")
+        # print("Fold", k, "\n")
 
         i_tr = index_tr(k, i_kfold)
         i_val = i_kfold[k]
