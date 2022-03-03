@@ -149,30 +149,20 @@ def GridSearch(x, y, kfold, epsilon, u):
         x_val = x[i_val, :]
         y_val = y[i_val] 
 
-        graph_x = []
-        graph_y = []
         error_tmp = []
         for i in epsilon:
-            graph_x_row = []
-            graph_y_row = []
             error_tmp_row = []
             for j in u:
                 alpha, beta, ksia, ksib = CSVR.CSVR(y=y_tr, x=x_tr, epsilon=i, u=j)
                 error_tmp_row.append( np.mean((yhat(alpha, beta, x_val) - y_val)**2 ))
-                graph_x_row.append(i)
-                graph_y_row.append(j)
-            graph_x.append(graph_x_row)
-            graph_y.append(graph_y_row)
             error_tmp.append(error_tmp_row)
 
-        graph_x = np.array(graph_x)
-        graph_y = np.array(graph_y)
         error_graph.append(error_tmp)
         
     mse_graph = np.mean(np.array(error_graph), axis=0)
 
     # search the position of parameters
-    pos_min_mse = np.argwhere(mse_graph == np.min(mse_graph))[0]
+    pos_min_mse = np.argwhere(mse_graph == np.min(mse_graph))[0]  # [0] makes it to 1-d array
 
     # return epsilon and u
-    return graph_x[pos_min_mse[0],pos_min_mse[1]], graph_y[pos_min_mse[0],pos_min_mse[1]]
+    return epsilon[pos_min_mse[0]], u[pos_min_mse[1]]
