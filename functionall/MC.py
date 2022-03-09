@@ -1,11 +1,11 @@
 import numpy as np
-import CNLS, CSVR
+import CNLS, CSVR, LCR
 from constant import CET_ADDI, FUN_PROD, OPT_LOCAL, RTS_VRS
 from sklearn.svm import SVR
 from sklearn.model_selection import GridSearchCV
 
 
-def simulation(x, y, y_true, e_para, u_para):
+def simulation(x, y, y_true, e_para, u_para, l_one):
 
     
     # solve the CSVR model
@@ -25,5 +25,10 @@ def simulation(x, y, y_true, e_para, u_para):
     model1.optimize(OPT_LOCAL)
     mse_cnls = np.mean((model1.get_frontier() - y_true)**2)
 
+    # solve the LCR model
+    alpha, beta, epsilon = LCR.LCR(y, x, L=l_one)
+    y_lcr = alpha + np.sum(beta * x, axis=1)
+    mse_lcr = np.mean((y_true - y_lcr)**2)
 
-    return mse_csvr, mse_svr, mse_cnls
+
+    return mse_csvr, mse_svr, mse_cnls, mse_lcr

@@ -23,55 +23,6 @@ def index_tr(k, i_kfold):
     return flatlist
 
 
-# cross validation: find the optimal u using: 
-#  1) usual rule; 2) one standard error rule
-def u_opt(x, y, kfold, epsilon, u):
-
-    # resample the index 
-    i_mix = random.sample(range(len(y)), k=len(y))
-
-    # divide up i.mix into K equal size chunks
-    m = len(y) // kfold
-    i_kfold = [i_mix[i:i+m] for i in range(0, len(i_mix), m)]
-    if len(i_kfold) > kfold:
-        i_kfold[-2:] = [i_kfold[-2]+i_kfold[-1]]
-
-    # total errors in each fold 
-    error = []
-    for k in range(kfold):
-        # print("Fold", k, "\n")
-
-        i_tr = index_tr(k, i_kfold)
-        i_val = i_kfold[k]
-
-        # training predictors, training responses
-        x_tr = x[i_tr, :]  
-        y_tr = y[i_tr]   
-        # validation predictors, validation responses
-        x_val = x[i_val, :]
-        y_val = y[i_val]  
-
-        error_tmp = []
-        for j in u:
-            alpha, beta, ksia, ksib = CSVR.CSVR(y=y_tr, x=x_tr, epsilon=epsilon, u=j)
-            error_tmp.append( np.mean((yhat(alpha, beta, x_val) - y_val)**2 ) )
-
-        error.append(error_tmp)
-        
-    # compute average error over all folds 
-    cv = np.mean(np.array(error), axis=0)
-
-    # one standard error rule, standard errors
-    se = np.std(error, ddof=1, axis=0) / np.sqrt(kfold)  
-
-    # largest value of u such that error is within one standard error of the cross-validated errors for u.min.
-    i2 = np.argmax(np.where(cv <= cv[np.argmin(cv)]+se[np.argmin(cv)]))
-        
-    # usual rule
-    i1 = np.argmin(cv)
-
-    return u[i1], u[i2]
-
 
 # cross validation for LCR: find the optimal L using: 
 #  1) usual rule; 2) one standard error rule
