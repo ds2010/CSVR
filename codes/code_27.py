@@ -1,5 +1,3 @@
-import sys
-sys.path.append('../functionall')
 import numpy as np
 import pandas as pd
 import random
