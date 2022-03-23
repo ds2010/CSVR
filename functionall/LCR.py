@@ -49,10 +49,10 @@ def LCR(y, x, L):
     model.afriat = Constraint(model.I, model.I, rule=afriat_rule, doc='afriat inequalities')
 
     # Lipschitz norm bounded by L
-    def lipschitz_norm_rule(model):
-        return sum(model.beta[ij]**2 for ij in model.I * model.J) <= L**2
+    def lipschitz_norm_rule(model, i):
+        return sum(model.beta[i, j]**2 for j in model.J) <= L**2
 
-    model.lipschitz_norm = Constraint(rule=lipschitz_norm_rule, doc='Lipschitz norm')
+    model.lipschitz_norm = Constraint(model.I, rule=lipschitz_norm_rule, doc='Lipschitz norm')
 
     # solve model
     solver = SolverFactory("mosek")
