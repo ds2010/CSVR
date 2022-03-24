@@ -4,8 +4,6 @@ import random
 import DGP
 import toolbox
 import MC
-from sklearn.svm import SVR
-from sklearn.model_selection import GridSearchCV
 
 
 def main():
