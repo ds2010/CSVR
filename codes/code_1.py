@@ -54,7 +54,7 @@ if __name__ == '__main__':
     np.random.seed(0)
     random.seed(0)
 
-    M=10
+    M=50
     n=50
     d=1
     sig = 0.5
