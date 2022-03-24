@@ -57,7 +57,7 @@ if __name__ == '__main__':
     random.seed(0)
 
     M=10
-    n=10
+    n=50
     d=1
     sig = 0.5
 
