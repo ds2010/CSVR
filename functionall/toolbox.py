@@ -3,6 +3,15 @@ import random
 import CSVR, LCR
 
 
+# Calculate R2 score
+def R2(y_hat, y):
+    y_bar = np.mean(y)
+    RSS = np.sum((y-y_hat)**2)
+    TSS = np.sum((y-y_bar)**2)
+
+    return 1 - RSS/TSS
+
+
 # Calculate yhat in testing sample
 def yhat(alpha, beta, x_test):
 
@@ -105,7 +114,7 @@ def GridSearch(x, y, kfold, epsilon, u):
             error_tmp_row = []
             for j in u:
                 alpha, beta, ksia, ksib = CSVR.CSVR(y=y_tr, x=x_tr, epsilon=i, u=j)
-                error_tmp_row.append( np.mean((yhat(alpha, beta, x_val) - y_val)**2 ))
+                error_tmp_row.append(np.mean((yhat(alpha, beta, x_val) - y_val)**2))
             error_tmp.append(error_tmp_row)
 
         error_graph.append(error_tmp)
