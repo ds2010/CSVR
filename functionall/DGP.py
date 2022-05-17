@@ -13,9 +13,11 @@ def inputs(n, d, sig):
 	elif d == 2:
 		y_true = 3 + x[:,0]**0.2 + x[:,1]**0.3
 		y = y_true + nse
-	else:
+	elif d == 3:
 		y_true = 3 + x[:, 0]**0.05 + x[:, 1]**0.15 + x[:, 2]**0.3
 		y = y_true + nse
+	else:
+		print('exceed the dimension')
 
 	return x, y, y_true
 
@@ -33,4 +35,36 @@ def Gauss(n, d, SNR):
 	normalization = np.sqrt(np.sum(x**2, axis=0))/np.sqrt(x.shape[0])
 	x = x/normalization
 
+	return x, y, y_true
+
+def norm(n, d, sig):
+
+	x = np.random.uniform(low=1, high=10, size=(n, d))
+	y_true = np.linalg.norm(x, axis=1)**2
+
+	nse = np.random.normal(0, sig, n)
+
+	y = y_true + nse
+
+	return x, y, y_true
+
+def outlier(n, d, sig, out):
+
+	x = np.random.uniform(low=1, high=10, size=(n, d))
+	# generate outliers
+	x_out = np.random.uniform(low=90, high=100, size=(out, d))
+	x = np.concatenate([x, x_out],axis=0)
+	nse = np.random.normal(0, sig, n+out)
+
+	if d == 1:
+		y_true = 3 + x[:,0]**0.5
+		y = y_true + nse
+	elif d == 2:
+		y_true = 3 + x[:,0]**0.2 + x[:,1]**0.3
+		y = y_true + nse
+	elif d == 3:
+		y_true = 3 + x[:, 0]**0.05 + x[:, 1]**0.15 + x[:, 2]**0.3
+		y = y_true + nse
+	else:
+		print('exceed the dimension')
 	return x, y, y_true
