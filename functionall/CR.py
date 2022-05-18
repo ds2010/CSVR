@@ -234,7 +234,7 @@ class CR:
         """Display beta value"""
         tools.assert_optimized(self.optimization_status)
         self.__model__.beta.display()
-
+    
     def display_lamda(self):
         """Display lamda value"""
         tools.assert_optimized(self.optimization_status)
@@ -265,6 +265,18 @@ class CR:
         beta = pd.DataFrame(beta, columns=['Name', 'Key', 'Value'])
         beta = beta.pivot(index='Name', columns='Key', values='Value')
         return beta.to_numpy()
+
+    def fit(self):
+        """Return alpha value by array"""
+        tools.assert_optimized(self.optimization_status)
+        tools.assert_various_return_to_scale(self.rts)
+        alpha = list(self.__model__.alpha[:].value)
+        beta = np.asarray([i + tuple([j]) for i, j in zip(list(self.__model__.beta),
+                                                          list(self.__model__.beta[:, :].value))])
+        beta = pd.DataFrame(beta, columns=['Name', 'Key', 'Value'])
+        beta = beta.pivot(index='Name', columns='Key', values='Value')
+
+        return np.asarray(alpha), beta.to_numpy()
 
     def get_residual(self):
         """Return residual value by array"""
