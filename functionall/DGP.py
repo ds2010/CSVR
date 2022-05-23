@@ -39,7 +39,7 @@ def Gauss(n, d, SNR):
 
 def norm(n, d, sig):
 
-	x = np.random.uniform(low=1, high=10, size=(n, d))
+	x = np.random.uniform(low=-1, high=1, size=(n, d))
 	y_true = np.linalg.norm(x, axis=1)**2
 
 	nse = np.random.normal(0, sig, n)
