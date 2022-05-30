@@ -24,6 +24,41 @@ def yhat(alpha, beta, x_test):
 
     return yhat
 
+def simulation(x, y, y_true, e, u, l):
+    '''
+    function of in-sample simulation.
+    input:
+    x, y, y_true are input data. e and u are tuning parameters(epsilon and C) of CSVR; 
+    l is the tuning parameter of LCR. 
+    output:
+    return four MSEs of four methods.
+    '''
+    
+    # solve the CSVR model
+    alpha, beta, ksia, ksib = CSVR.CSVR(y, x, e, u)
+    y_csvr = alpha + np.sum(beta * x, axis=1)
+    mse_csvr = np.mean((y_true - y_csvr)**2)
+
+    # solve the SVR model
+    para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'epsilon': [0, 0.001, 0.01, 0.1, 0.2]}
+    svr = GridSearchCV(SVR(),para_grid)
+    svr.fit(x, y)
+    y_svr = svr.predict(x)
+    mse_svr = np.mean((y_true - y_svr)**2)
+
+    # solve the CNLS model
+    model1 = CNLS.CNLS(y, x, z=None, cet= CET_ADDI, fun= FUN_PROD, rts= RTS_VRS)
+    model1.optimize(OPT_LOCAL)
+    mse_cnls = np.mean((model1.get_frontier() - y_true)**2)
+
+    # solve the LCR model
+    alpha, beta, epsilon = LCR.LCR(y, x, l)
+    y_lcr = alpha + np.sum(beta * x, axis=1)
+    mse_lcr = np.mean((y_true - y_lcr)**2)
+
+
+    return mse_csvr, mse_svr, mse_cnls, mse_lcr
+
 
 def simulation_in(n, d, sig, e, u, l):
     '''
@@ -75,31 +110,32 @@ def simulation_out(n, d, sig, e, u, l, nt):
     '''
 
     # generate train and test sample
-    x, y, y_true = DGP.inputs(n, d, sig)
-    x_te, y_te, y_te_true = DGP.inputs(nt, d, sig)
+    x, y, y_true = DGP.inputs(n+nt, d, sig)
+    x_tr, y_tr = x[:n,:], y[:n]
+    x_te, y_te = x[-nt:,:], y_true[-nt:]
 
     # solve the CSVR model
-    alpha, beta, ksia, ksib = CSVR.CSVR(y, x, e, u)
+    alpha, beta, ksia, ksib = CSVR.CSVR(y_tr, x_tr, e, u)
     y_csvr = yhat(alpha, beta, x_te)
-    mse_csvr = np.mean((y_te_true - y_csvr)**2)
+    mse_csvr = np.mean((y_te - y_csvr)**2)
 
     # solve the SVR model
     para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'epsilon': [0, 0.001, 0.01, 0.1, 0.2]}
     svr = GridSearchCV(SVR(),para_grid)
-    svr.fit(x, y)
+    svr.fit(x_tr, y_tr)
     y_svr = svr.predict(x_te)
-    mse_svr = np.mean((y_te_true - y_svr)**2)
+    mse_svr = np.mean((y_te - y_svr)**2)
 
     # solve the CNLS model
-    model = CNLS.CNLS(y, x, z=None, cet= CET_ADDI, fun= FUN_PROD, rts= RTS_VRS)
+    model = CNLS.CNLS(y_tr, x_tr, z=None, cet= CET_ADDI, fun= FUN_PROD, rts= RTS_VRS)
     model.optimize(OPT_LOCAL)
     alpha, beta = model.get_alpha(), model.get_beta()
     y_cnls = yhat(alpha, beta, x_te)
-    mse_cnls = np.mean((y_te_true - y_cnls)**2)
+    mse_cnls = np.mean((y_te - y_cnls)**2)
 
     # solve the LCR model
-    alpha, beta, epsilon = LCR.LCR(y, x, l)
+    alpha, beta, epsilon = LCR.LCR(y_tr, x_tr, l)
     y_lcr = yhat(alpha, beta, x_te)
-    mse_lcr = np.mean((y_te_true - y_lcr)**2)
+    mse_lcr = np.mean((y_te - y_lcr)**2)
 
     return mse_csvr, mse_svr, mse_cnls, mse_lcr
