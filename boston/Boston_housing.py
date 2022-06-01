@@ -59,7 +59,7 @@ def csvr_mse(x, y, i_mix):
     mse = np.array([np.mean(np.array(error_out), axis=0), np.mean(np.array(error_in), axis=0)])
     std = np.array([np.std(np.array(error_out), axis=0), np.std(np.array(error_in), axis=0)])
 
-    return mse, std
+    return mse, std, error_out
 
 # SVR
 def svr_mse(x, y, i_mix):
@@ -173,7 +173,7 @@ def lcr(x, y, i_mix):
 
 
 # load data
-data = pd.read_csv('Boston.csv')
+data = pd.read_csv('Boston.csv').head(20)
 
 # x = data.loc[:, ['NOX', 'DIS', 'PTRATIO', 'INDUS', 'TAX', 'ZN', 'RAD']]
 x = data.loc[:, ['CRIM', 'ZN', 'INDUS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT']]
@@ -185,7 +185,7 @@ y = np.array(y)
 kfold = 5
 i_mix = random.sample(range(len(y)), k=len(y))
 
-mse_csvr, std_csvr = csvr_mse(x, y, i_mix)
+mse_csvr, std_csvr, error_out = csvr_mse(x, y, i_mix)
 mse_cnls,std_cnls = cnls_mse(x, y, i_mix)
 mse_svr, std_svr = svr_mse(x, y, i_mix)
 mse_lcr, std_lcr = lcr(x, y, i_mix)
