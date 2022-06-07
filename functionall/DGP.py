@@ -38,9 +38,13 @@ def Gauss(n, d, SNR):
 	return x, y, y_true
 
 def norm(n, d, sig):
+	"""
+	This is a DGP that fit the shape of CSVR.
+	y = -||x||**2
+	"""
 
 	x = np.random.uniform(low=-1, high=1, size=(n, d))
-	y_true = np.linalg.norm(x, axis=1)**2
+	y_true = -np.linalg.norm(x, axis=1)**2
 
 	nse = np.random.normal(0, sig, n)
 
