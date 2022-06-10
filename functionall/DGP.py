@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 
 def inputs(n, d, sig):
@@ -40,7 +41,7 @@ def Gauss(n, d, SNR):
 def norm(n, d, sig):
 	"""
 	This is a DGP that fit the shape of CSVR.
-	y = -||x||**2
+	y = -||x||^2
 	"""
 
 	x = np.random.uniform(low=-1, high=1, size=(n, d))
@@ -71,4 +72,20 @@ def outlier(n, d, sig, out):
 		y = y_true + nse
 	else:
 		print('exceed the dimension')
+	return x, y, y_true
+
+def multi(n, d, sig):
+	"""
+	DGP: y = multi[x_d^(0.8/d)] + e
+	"""
+	
+	x = np.random.uniform(low=1, high=10, size=(n, d))
+	y_true = np.zeros(n,)
+	for i in range(n):
+		y_true[i] = math.prod(x[i,:]**(0.8/d))
+
+	nse = np.random.normal(0, sig, n)
+
+	y = y_true + nse
+
 	return x, y, y_true
