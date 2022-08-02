@@ -32,7 +32,6 @@ def index_tr(k, i_kfold):
     return flatlist
 
 
-
 # cross validation for LCR: find the optimal L using: 
 #  1) usual rule; 2) one standard error rule
 def L_opt(x, y, kfold, L_para):
