@@ -9,4 +9,4 @@ In functionall folder, we list all functions used in experiements.
 * constant.py and tool.py: support files from [Pystoned package](https://github.com/ds2010/pyStoNED).
 # Citation
 If you use CSVR in a scientific publication, we would appreciate citations:
-> Liao ZQ, Dai S, Kuosmanen T. (2021). Convex support vector regression. arXiv preprint arXiv: 2209.12538.
+> Liao ZQ, Dai S, & Kuosmanen T. (2021). Convex support vector regression. arXiv preprint arXiv: 2209.12538.
