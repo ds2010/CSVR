@@ -182,15 +182,11 @@ y = np.array(y)
 kfold = 5
 i_mix = random.sample(range(len(y)), k=len(y))
 
-# mse_csvr, std_csvr, error_out = csvr_mse(x, y, i_mix)
-# mse_cnls,std_cnls = cnls_mse(x, y, i_mix)
-# mse_svr, std_svr = svr_mse(x, y, i_mix)
-# mse_lcr, std_lcr = lcr(x, y, i_mix)
-# data = np.array([mse_csvr, std_csvr, mse_svr, std_svr, mse_cnls, std_cnls, mse_lcr, std_lcr]).T
+mse_csvr, std_csvr, error_out = csvr_mse(x, y, i_mix)
+mse_cnls,std_cnls = cnls_mse(x, y, i_mix)
+mse_svr, std_svr = svr_mse(x, y, i_mix)
+mse_lcr, std_lcr = lcr(x, y, i_mix)
+data = np.array([mse_csvr, std_csvr, mse_svr, std_svr, mse_cnls, std_cnls, mse_lcr, std_lcr]).T
 
-# df = pd.DataFrame(data, columns = ['csvr_mse', 'csvr_std', 'svr_mse', 'svr_std', 'cnls_mse', 'cnls_std', 'lcr_mse', 'lcr_std'])
-mse_csvr, std_csvr = csvr_mse(x, y, i_mix)
-data = np.array([mse_csvr, std_csvr]).T
-
-df = pd.DataFrame(data, columns = ['csvr_mse', 'csvr_std'])
-df.to_excel('mse_csvr.xlsx')
+df = pd.DataFrame(data, columns = ['csvr_mse', 'csvr_std', 'svr_mse', 'svr_std', 'cnls_mse', 'cnls_std', 'lcr_mse', 'lcr_std'])
+df.to_excel('mse.xlsx')
