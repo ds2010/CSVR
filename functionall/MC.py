@@ -1,5 +1,5 @@
 import numpy as np
-import CNLS, CSVR, LCR, DGP
+import CNLS, CSVR, LCR, DGP, toolbox
 from constant import CET_ADDI, FUN_PROD, OPT_LOCAL, RTS_VRS
 from sklearn.svm import SVR
 from sklearn.model_selection import GridSearchCV
@@ -24,15 +24,24 @@ def yhat(alpha, beta, x_test):
 
     return yhat
 
-def simulation(x, y, y_true, e, u, l):
+def simulation(n, d, sig):
     '''
     function of in-sample simulation.
     input:
-    x, y, y_true are input data. e and u are tuning parameters(epsilon and C) of CSVR; 
-    l is the tuning parameter of LCR. 
+    n, d, sig are parameters of DGP.
     output:
     return four MSEs of four methods.
     '''
+    # generate input data
+    x, y, y_true = DGP.inputs(n, d, sig)
+
+    # tuning parameters
+    kfold = 5
+    epsilon, para = np.array([0.001, 0.01, 0.1, 0.2, 0.5]), np.linspace(0.1, 8, 11)
+    L_para = np.array([0.1, 0.5, 1, 2, 5])
+    e = toolbox.GridSearch(x, y, kfold, epsilon, para)[0]
+    u = toolbox.GridSearch(x, y, kfold, epsilon, para)[1]
+    l = toolbox.L_opt(x, y, kfold, L_para)[1]
     
     # solve the CSVR model
     alpha, beta, ksia, ksib = CSVR.CSVR(y, x, e, u)
@@ -56,7 +65,6 @@ def simulation(x, y, y_true, e, u, l):
     y_lcr = alpha + np.sum(beta * x, axis=1)
     mse_lcr = np.mean((y_true - y_lcr)**2)
 
-
     return mse_csvr, mse_svr, mse_cnls, mse_lcr
 
 
@@ -72,10 +80,17 @@ def simulation_out(n, d, sig, e, u, l, nt):
     '''
 
     # generate train and test sample
-    x, y, y_true = DGP.multi(n+nt, d, sig)    # for DGP y = -||x||^2
-    # x, y, y_true = DGP.inputs(n+nt, d, sig)    # for DGP I-III
+    x, y, y_true = DGP.inputs(n+nt, d, sig)
     x_tr, y_tr = x[:n,:], y[:n]
     x_te, y_te = x[-nt:,:], y_true[-nt:]
+
+    # tuning parameters
+    kfold = 5
+    epsilon, para = np.array([0.001, 0.01, 0.1, 0.2, 0.5]), np.linspace(0.1, 8, 11)
+    L_para = np.array([0.1, 0.5, 1, 2, 5])
+    e = toolbox.GridSearch(x_tr, y_tr, kfold, epsilon, para)[0]
+    u = toolbox.GridSearch(x_tr, y_tr, kfold, epsilon, para)[1]
+    l = toolbox.L_opt(x_tr, y_tr, kfold, L_para)[1]
 
     # solve the CSVR model
     alpha, beta, ksia, ksib = CSVR.CSVR(y_tr, x_tr, e, u)
@@ -100,5 +115,46 @@ def simulation_out(n, d, sig, e, u, l, nt):
     alpha, beta, epsilon = LCR.LCR(y_tr, x_tr, l)
     y_lcr = yhat(alpha, beta, x_te)
     mse_lcr = np.mean((y_te - y_lcr)**2)
+
+    return mse_csvr, mse_svr, mse_cnls, mse_lcr
+
+def simulation_outlier(n, d, sig, nt):
+    '''
+    function of in-sample simulation with outliers.
+    input:
+    n, d, sig are parameters of DGP. nt is the number of outliers.
+    output:
+    return four MSEs of four methods.
+    '''
+
+    x, y, y_true = DGP.outlier(n, d, sig, nt)
+    kfold = 5
+    epsilon, para = np.array([0.001, 0.01, 0.1, 0.2, 0.5]), np.linspace(0.1, 8, 11)
+    L_para = np.array([0.1, 0.5, 1, 2, 5])
+    e = toolbox.GridSearch(x, y, kfold, epsilon, para)[0]
+    u = toolbox.GridSearch(x, y, kfold, epsilon, para)[1]
+    l = toolbox.L_opt(x, y, kfold, L_para)[1]
+
+    # solve the CSVR model
+    alpha, beta, ksia, ksib = CSVR.CSVR(y, x, e, u)
+    y_csvr = alpha + np.sum(beta * x, axis=1)
+    mse_csvr = np.mean((y_true - y_csvr)**2)
+
+    # solve the SVR model
+    para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'epsilon': [0, 0.001, 0.01, 0.1, 0.2]}
+    svr = GridSearchCV(SVR(),para_grid)
+    svr.fit(x, y)
+    y_svr = svr.predict(x)
+    mse_svr = np.mean((y_true - y_svr)**2)
+
+    # solve the CNLS model
+    model1 = CNLS.CNLS(y, x, z=None, cet= CET_ADDI, fun= FUN_PROD, rts= RTS_VRS)
+    model1.optimize(OPT_LOCAL)
+    mse_cnls = np.mean((model1.get_frontier() - y_true)**2)
+
+    # solve the LCR model
+    alpha, beta, epsilon = LCR.LCR(y, x, l)
+    y_lcr = alpha + np.sum(beta * x, axis=1)
+    mse_lcr = np.mean((y_true - y_lcr)**2)
 
     return mse_csvr, mse_svr, mse_cnls, mse_lcr

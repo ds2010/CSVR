@@ -11,7 +11,6 @@ def R2(y_hat, y):
 
     return 1 - RSS/TSS
 
-
 # Calculate yhat in testing sample
 def yhat(alpha, beta, x_test):
 
@@ -22,7 +21,6 @@ def yhat(alpha, beta, x_test):
         
     return yhat
 
-
 # calculate the index of training set
 def index_tr(k, i_kfold):
     
@@ -30,7 +28,6 @@ def index_tr(k, i_kfold):
     flatlist = [item for elem in i_kfold_without_k for item in elem]
 
     return flatlist
-
 
 # cross validation for LCR: find the optimal L using: 
 #  1) usual rule; 2) one standard error rule
@@ -79,7 +76,6 @@ def L_opt(x, y, kfold, L_para):
     # usual rule
     i1 = np.argmin(cv)
     return L_para[i1], L_para[i2]
-
 
 # cross validation using grid search
 def GridSearch(x, y, kfold, epsilon, u):

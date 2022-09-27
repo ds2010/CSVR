@@ -25,9 +25,8 @@ def yhat(alpha, beta, x_test):
 # CSVR
 def csvr_mse(x, y, i_mix):
 
-    # u = np.linspace(0, 10, 20)
-    # epsilon = np.array([0, 0.001, 0.01, 0.1, 0.2])
-    # e_grid, u_grid = toolbox.GridSearch(x, y, kfold, epsilon=epsilon, u=u)
+    u = 1.6
+    epsilon = 0.5
 	
 	
     error_out, error_in = [], []
@@ -51,7 +50,8 @@ def csvr_mse(x, y, i_mix):
         x_val = x[i_val, :]
         y_val = y[i_val] 
 
-        alpha, beta, ksia, ksib = CSVR.CSVR(y_tr, x_tr, epsilon=0.2, u=1.58)
+        # e_grid, u_grid = toolbox.GridSearch(x_tr, y_tr, kfold, epsilon=epsilon, u=u)
+        alpha, beta, ksia, ksib = CSVR.CSVR(y_tr, x_tr, epsilon, u)
 
         error_out.append(np.mean((yhat(alpha, beta, x_val) - y_val)**2))
         error_in.append(np.mean((yhat(alpha, beta, x_tr) - y_tr)**2))
@@ -59,7 +59,7 @@ def csvr_mse(x, y, i_mix):
     mse = np.array([np.mean(np.array(error_out), axis=0), np.mean(np.array(error_in), axis=0)])
     std = np.array([np.std(np.array(error_out), axis=0), np.std(np.array(error_in), axis=0)])
 
-    return mse, std, error_out
+    return mse, std
 
 # SVR
 def svr_mse(x, y, i_mix):
@@ -161,7 +161,7 @@ def lcr(x, y, i_mix):
         x_val = x[i_val, :]
         y_val = y[i_val] 
 
-        alpha, beta, epsilon = LCR.LCR(y_tr, x_tr, L= 3.68)
+        alpha, beta, epsilon = LCR.LCR(y_tr, x_tr, L= 0.45)
 
         error_out.append(np.mean((yhat(alpha, beta, x_val) - y_val)**2))
         error_in.append(np.mean((yhat(alpha, beta, x_tr) - y_tr)**2))
@@ -173,24 +173,24 @@ def lcr(x, y, i_mix):
 
 
 # load data
-data = pd.read_csv('Boston.csv').head(20)
-
-# x = data.loc[:, ['NOX', 'DIS', 'PTRATIO', 'INDUS', 'TAX', 'ZN', 'RAD']]
+data = pd.read_csv('Boston.csv')
 x = data.loc[:, ['CRIM', 'ZN', 'INDUS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT']]
 y = data['MEDV']
-
 x = np.array(x)
 y = np.array(y)
 
 kfold = 5
 i_mix = random.sample(range(len(y)), k=len(y))
 
-mse_csvr, std_csvr, error_out = csvr_mse(x, y, i_mix)
-mse_cnls,std_cnls = cnls_mse(x, y, i_mix)
-mse_svr, std_svr = svr_mse(x, y, i_mix)
-mse_lcr, std_lcr = lcr(x, y, i_mix)
-data = np.array([mse_csvr, std_csvr, mse_svr, std_svr, mse_cnls, std_cnls, mse_lcr, std_lcr]).T
+# mse_csvr, std_csvr, error_out = csvr_mse(x, y, i_mix)
+# mse_cnls,std_cnls = cnls_mse(x, y, i_mix)
+# mse_svr, std_svr = svr_mse(x, y, i_mix)
+# mse_lcr, std_lcr = lcr(x, y, i_mix)
+# data = np.array([mse_csvr, std_csvr, mse_svr, std_svr, mse_cnls, std_cnls, mse_lcr, std_lcr]).T
 
-df = pd.DataFrame(data, columns = ['csvr_mse', 'csvr_std', 'svr_mse', 'svr_std', 'cnls_mse', 'cnls_std', 'lcr_mse', 'lcr_std'])
-df.to_excel('mse.xlsx')
-#42.3754272930659 63.99884850752447 2327.985041400418 49.52787682333644 0.2 1.5789473684210527 3.6842105263157894
+# df = pd.DataFrame(data, columns = ['csvr_mse', 'csvr_std', 'svr_mse', 'svr_std', 'cnls_mse', 'cnls_std', 'lcr_mse', 'lcr_std'])
+mse_csvr, std_csvr = csvr_mse(x, y, i_mix)
+data = np.array([mse_csvr, std_csvr]).T
+
+df = pd.DataFrame(data, columns = ['csvr_mse', 'csvr_std'])
+df.to_excel('mse_csvr.xlsx')
