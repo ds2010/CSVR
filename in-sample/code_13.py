@@ -24,12 +24,12 @@ def process(arg):
 if __name__ == '__main__':
     np.random.seed(0)
     random.seed(0)
-    n=50
+    n=500
     d=2
-    sig = 1
+    sig = 0.5
 
     with Pool(cpus) as p:
         
         df = pd.DataFrame(p.map(process, range(50)), columns = ['mse_csvr', 'mse_svr', 'mse_svrl', 'mse_cnls', 'mse_lcr', 
-                                        'mape_csvr', 'mape_svr', 'mape_svrl', 'mape_cnls', 'mape_lcr'])
+                                        'mae_csvr', 'mae_svr', 'mae_svrl', 'mae_cnls', 'mae_lcr'])
         df.to_csv('measure' + '{0}_{1}_{2}.csv'.format(n, d, sig))

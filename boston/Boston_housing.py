@@ -10,7 +10,6 @@ from sklearn import linear_model
 from sklearn import preprocessing
 from sklearn.model_selection import GridSearchCV
 
-random.seed(0)
 
 # Calculate yhat in testing sample
 def yhat(alpha, beta, x_test):
@@ -25,11 +24,11 @@ def yhat(alpha, beta, x_test):
 # CSVR
 def csvr_mse(x, y, i_mix):
 
-    u = 1.6
-    epsilon = 0.5
+    u = np.linspace(0.1, 5, 10)
+    epsilon = np.linspace(0.001,0.5,5)
+    e_grid, u_grid = toolbox.GridSearch(x, y, kfold, epsilon=epsilon, u=u)
 	
-	
-    error_out, error_in = [], []
+    mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in = [], [], [], [], [], [], [], []
     for k in range(kfold):
         # print("Fold", k, "\n")
 
@@ -44,27 +43,35 @@ def csvr_mse(x, y, i_mix):
 
         # training predictors, training responses
         x_tr = x[i_tr, :]  
-        y_tr = y[i_tr]   
+        y_tr = y[i_tr]  
 
         # validation predictors, validation responses
         x_val = x[i_val, :]
         y_val = y[i_val] 
 
-        # e_grid, u_grid = toolbox.GridSearch(x_tr, y_tr, kfold, epsilon=epsilon, u=u)
-        alpha, beta, ksia, ksib = CSVR.CSVR(y_tr, x_tr, epsilon, u)
+        alpha, beta, ksia, ksib = CSVR.CSVR(y_tr, x_tr, e_grid, u_grid)
 
-        error_out.append(np.mean((yhat(alpha, beta, x_val) - y_val)**2))
-        error_in.append(np.mean((yhat(alpha, beta, x_tr) - y_tr)**2))
-    	
-    mse = np.array([np.mean(np.array(error_out), axis=0), np.mean(np.array(error_in), axis=0)])
-    std = np.array([np.std(np.array(error_out), axis=0), np.std(np.array(error_in), axis=0)])
+        mse_out.append(np.mean((yhat(alpha, beta, x_val) - y_val)**2))
+        mse_in.append(np.mean((yhat(alpha, beta, x_tr) - y_tr)**2))
 
-    return mse, std
+        mape_out.append(np.mean(np.absolute((y_val - yhat(alpha, beta, x_val))/y_val))*100)
+        mape_in.append(np.mean(np.absolute((y_tr - yhat(alpha, beta, x_tr))/y_tr))*100)
 
-# SVR
+        mae_out.append(np.mean(np.absolute(y_val - yhat(alpha, beta, x_val))))
+        mae_in.append(np.mean(np.absolute(y_tr - yhat(alpha, beta, x_tr))))
+
+        me_out.append(np.mean(y_val - yhat(alpha, beta, x_val)))
+        me_in.append(np.mean(y_tr - yhat(alpha, beta, x_tr)))
+
+    error = np.mean([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+    std = np.std([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+
+    return error, std
+
+# SVR RBF
 def svr_mse(x, y, i_mix):
 
-    error_out, error_in = [], []
+    mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in = [], [], [], [], [], [], [], []
     for k in range(kfold):
         # print("Fold", k, "\n")
 
@@ -79,28 +86,129 @@ def svr_mse(x, y, i_mix):
 
         # training predictors, training responses
         x_tr = x[i_tr, :]  
-        y_tr = y[i_tr]   
+        y_tr = y[i_tr]  
 
         # validation predictors, validation responses
         x_val = x[i_val, :]
         y_val = y[i_val] 
 
         para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'epsilon': [0, 0.001, 0.01, 0.1, 0.2]}
-        svr = GridSearchCV(SVR(),para_grid)
+        svr = GridSearchCV(SVR(kernel='rbf'),para_grid)
         svr.fit(x_tr, y_tr)
 
-        error_out.append(np.mean((svr.predict(x_val) - y_val)**2))
-        error_in.append(np.mean((svr.predict(x_tr) - y_tr)**2))
+        mse_out.append(np.mean((svr.predict(x_val) - y_val)**2))
+        mse_in.append(np.mean((svr.predict(x_tr) - y_tr)**2))
 
-    mse = np.array([np.mean(np.array(error_out), axis=0), np.mean(np.array(error_in), axis=0)])
-    std = np.array([np.std(np.array(error_out), axis=0), np.std(np.array(error_in), axis=0)])
+        mape_out.append(np.mean(np.absolute((y_val - svr.predict(x_val))/y_val))*100)
+        mape_in.append(np.mean(np.absolute((y_tr - svr.predict(x_tr))/y_tr))*100)
 
-    return mse, std
+        mae_out.append(np.mean(np.absolute(y_val - svr.predict(x_val))))
+        mae_in.append(np.mean(np.absolute(y_tr - svr.predict(x_tr))))
+
+        me_out.append(np.mean(y_val - svr.predict(x_val)))
+        me_in.append(np.mean(y_tr - svr.predict(x_tr)))
+
+    error = np.mean([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+    std = np.std([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+
+    return error, std
+
+# SVR poly
+def svrp_mse(x, y, i_mix):
+
+    mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in = [], [], [], [], [], [], [], []
+    for k in range(kfold):
+        # print("Fold", k, "\n")
+
+        # divide up i.mix into K equal size chunks
+        m = len(y) // kfold
+        i_kfold = [i_mix[i:i+m] for i in range(0, len(i_mix), m)]
+        if len(i_kfold) > kfold:
+            i_kfold[-2:] = [i_kfold[-2]+i_kfold[-1]]
+        
+        i_tr = toolbox.index_tr(k, i_kfold)
+        i_val = i_kfold[k]
+
+        # training predictors, training responses
+        x_tr = x[i_tr, :]  
+        y_tr = y[i_tr]  
+
+        # validation predictors, validation responses
+        x_val = x[i_val, :]
+        y_val = y[i_val] 
+
+        para_grid = {'C': [0.1, 0.5, 1, 2, 5], 'epsilon': [0, 0.001, 0.01, 0.1, 0.2]}
+        svr = GridSearchCV(SVR(kernel='poly'),para_grid)
+        svr.fit(x_tr, y_tr)
+
+        mse_out.append(np.mean((svr.predict(x_val) - y_val)**2))
+        mse_in.append(np.mean((svr.predict(x_tr) - y_tr)**2))
+
+        mape_out.append(np.mean(np.absolute((y_val - svr.predict(x_val))/y_val))*100)
+        mape_in.append(np.mean(np.absolute((y_tr - svr.predict(x_tr))/y_tr))*100)
+
+        mae_out.append(np.mean(np.absolute(y_val - svr.predict(x_val))))
+        mae_in.append(np.mean(np.absolute(y_tr - svr.predict(x_tr))))
+
+        me_out.append(np.mean(y_val - svr.predict(x_val)))
+        me_in.append(np.mean(y_tr - svr.predict(x_tr)))
+
+    error = np.mean([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+    std = np.std([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+
+    return error, std
+
+# SFA
+def sfa_mse(x, y, i_mix):
+
+    mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in = [], [], [], [], [], [], [], []
+    for k in range(kfold):
+        # print("Fold", k, "\n")
+
+        # divide up i.mix into K equal size chunks
+        m = len(y) // kfold
+        i_kfold = [i_mix[i:i+m] for i in range(0, len(i_mix), m)]
+        if len(i_kfold) > kfold:
+            i_kfold[-2:] = [i_kfold[-2]+i_kfold[-1]]
+        
+        i_tr = toolbox.index_tr(k, i_kfold)
+        i_val = i_kfold[k]
+
+        # training predictors, training responses
+        x_tr = x[i_tr, :]  
+        y_tr = y[i_tr]  
+
+        # validation predictors, validation responses
+        x_val = x[i_val, :]
+        y_val = y[i_val] 
+
+        sfa = linear_model.LinearRegression()
+        sfa.fit(np.log(x_tr), np.log(y_tr))
+
+        y_hat_val = np.exp(sfa.predict(np.log(x_val)))
+        y_hat_tr = np.exp(sfa.predict(np.log(x_tr)))
+
+        mse_out.append(np.mean((y_hat_val - y_val)**2))
+        mse_in.append(np.mean((y_hat_tr - y_tr)**2))
+
+        mape_out.append(np.mean(np.absolute((y_val - y_hat_val)/y_val))*100)
+        mape_in.append(np.mean(np.absolute((y_tr - y_hat_tr)/y_tr))*100)
+
+        mae_out.append(np.mean(np.absolute(y_val - y_hat_val)))
+        mae_in.append(np.mean(np.absolute(y_tr - y_hat_tr)))
+
+        me_out.append(np.mean(y_val - y_hat_val))
+        me_in.append(np.mean(y_tr - y_hat_tr))
+
+    error = np.mean([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+    std = np.std([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+
+    return error, std
 
 # CNLS
 def cnls_mse(x, y, i_mix):
 
-    error_out, error_in = [], []
+    mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in = [], [], [], [], [], [], [], []
     for k in range(kfold):
         # print("Fold", k, "\n")
 
@@ -115,7 +223,7 @@ def cnls_mse(x, y, i_mix):
 
         # training predictors, training responses
         x_tr = x[i_tr, :]  
-        y_tr = y[i_tr]   
+        y_tr = y[i_tr]  
 
         # validation predictors, validation responses
         x_val = x[i_val, :]
@@ -125,22 +233,31 @@ def cnls_mse(x, y, i_mix):
         model.optimize(OPT_LOCAL)
         alpha, beta = model.get_alpha(), model.get_beta()
 
-        error_out.append(np.mean((yhat(alpha, beta, x_val) - y_val)**2))
-        error_in.append(np.mean((yhat(alpha, beta, x_tr) - y_tr)**2))
+        mse_out.append(np.mean((yhat(alpha, beta, x_val) - y_val)**2))
+        mse_in.append(np.mean((yhat(alpha, beta, x_tr) - y_tr)**2))
 
-    mse = np.array([np.mean(np.array(error_out), axis=0), np.mean(np.array(error_in), axis=0)])
-    std = np.array([np.std(np.array(error_out), axis=0), np.std(np.array(error_in), axis=0)])
+        mape_out.append(np.mean(np.absolute((y_val - yhat(alpha, beta, x_val))/y_val))*100)
+        mape_in.append(np.mean(np.absolute((y_tr - yhat(alpha, beta, x_tr))/y_tr))*100)
 
-    return mse, std
+        mae_out.append(np.mean(np.absolute(y_val - yhat(alpha, beta, x_val))))
+        mae_in.append(np.mean(np.absolute(y_tr - yhat(alpha, beta, x_tr))))
+
+        me_out.append(np.mean(y_val - yhat(alpha, beta, x_val)))
+        me_in.append(np.mean(y_tr - yhat(alpha, beta, x_tr)))
+
+    error = np.mean([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+    std = np.std([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+
+    return error, std
 
 
-# convex regression
+# LCR
 def lcr(x, y, i_mix):
 
-    # l = np.linspace(0, 10, 20)
-    # l_one = toolbox.L_opt(x, y, kfold, l)[1]
+    l = np.linspace(0, 5, 10)
+    l_one = toolbox.L_opt(x, y, kfold, l)[1]
 
-    error_out, error_in = [], []
+    mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in = [], [], [], [], [], [], [], []
     for k in range(kfold):
         # print("Fold", k, "\n")
 
@@ -155,21 +272,30 @@ def lcr(x, y, i_mix):
 
         # training predictors, training responses
         x_tr = x[i_tr, :]  
-        y_tr = y[i_tr]   
+        y_tr = y[i_tr]  
 
         # validation predictors, validation responses
         x_val = x[i_val, :]
         y_val = y[i_val] 
 
-        alpha, beta, epsilon = LCR.LCR(y_tr, x_tr, L= 0.45)
+        alpha, beta, epsilon = LCR.LCR(y_tr, x_tr, l_one)
 
-        error_out.append(np.mean((yhat(alpha, beta, x_val) - y_val)**2))
-        error_in.append(np.mean((yhat(alpha, beta, x_tr) - y_tr)**2))
+        mse_out.append(np.mean((yhat(alpha, beta, x_val) - y_val)**2))
+        mse_in.append(np.mean((yhat(alpha, beta, x_tr) - y_tr)**2))
 
-    mse = np.array([np.mean(np.array(error_out), axis=0), np.mean(np.array(error_in), axis=0)])
-    std = np.array([np.std(np.array(error_out), axis=0), np.std(np.array(error_in), axis=0)])
+        mape_out.append(np.mean(np.absolute((y_val - yhat(alpha, beta, x_val))/y_val))*100)
+        mape_in.append(np.mean(np.absolute((y_tr - yhat(alpha, beta, x_tr))/y_tr))*100)
 
-    return mse, std
+        mae_out.append(np.mean(np.absolute(y_val - yhat(alpha, beta, x_val))))
+        mae_in.append(np.mean(np.absolute(y_tr - yhat(alpha, beta, x_tr))))
+
+        me_out.append(np.mean(y_val - yhat(alpha, beta, x_val)))
+        me_in.append(np.mean(y_tr - yhat(alpha, beta, x_tr)))
+
+    error = np.mean([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+    std = np.std([mse_out, mse_in, mape_out, mape_in, mae_out, mae_in, me_out, me_in], axis=1)
+
+    return error, std
 
 
 # load data
@@ -179,14 +305,12 @@ y = data['MEDV']
 x = np.array(x)
 y = np.array(y)
 
+# validation setting
 kfold = 5
+random.seed(0)
 i_mix = random.sample(range(len(y)), k=len(y))
 
-mse_csvr, std_csvr, error_out = csvr_mse(x, y, i_mix)
-mse_cnls,std_cnls = cnls_mse(x, y, i_mix)
-mse_svr, std_svr = svr_mse(x, y, i_mix)
-mse_lcr, std_lcr = lcr(x, y, i_mix)
-data = np.array([mse_csvr, std_csvr, mse_svr, std_svr, mse_cnls, std_cnls, mse_lcr, std_lcr]).T
-
-df = pd.DataFrame(data, columns = ['csvr_mse', 'csvr_std', 'svr_mse', 'svr_std', 'cnls_mse', 'cnls_std', 'lcr_mse', 'lcr_std'])
-df.to_excel('mse.xlsx')
+# generate the mse of kfold
+data = np.vstack((csvr_mse(x, y, i_mix), svr_mse(x, y, i_mix), svrp_mse(x, y, i_mix), sfa_mse(x, y, i_mix), cnls_mse(x, y, i_mix), lcr(x, y, i_mix))).T
+df = pd.DataFrame(data, columns = ['csvr', 'std', 'svr', 'std', 'svrp', 'std', 'sfa', 'std', 'cnls', 'std', 'lcr', 'std'], index=['mse_out', 'mse_in', 'mape_out', 'mape_in', 'mae_out', 'mae_in', 'me_out', 'me_in'])
+df.to_excel('measures_boston.xlsx')
